@@ -1,7 +1,7 @@
 #include <Windows.h>
 
-const int DISTANCE = 50;
-const int R = 100;
+const int DISTANCE = 50;//矩形的间距
+const int R = 100;//矩形的边长
 
 LRESULT CALLBACK WinProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -51,7 +51,15 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd, &ps);
 		GetClientRect(hwnd, &rect);
-		Rectangle(hdc, 100, 100, 100, 100);
+		for (int i = rect.left+DISTANCE; i <= rect.right - R; i+=(DISTANCE+R))
+		{
+			for (int j = rect.top + DISTANCE; j <= rect.bottom - R; j += (DISTANCE + R))
+			{
+				Rectangle(hdc, i, j, i + R, j + R);
+			}
+			
+		}
+		
 		EndPaint(hwnd, &ps);
 		return 0;
 	case WM_DESTROY:
