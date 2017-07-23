@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.14
+VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sysmets", "sysmets\sysmets.vcxproj", "{FEEA108D-BFD5-4D5B-9EB8-B84F9D8D474B}"
 EndProject
@@ -16,6 +16,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rectangle", "rectangle\rectangle.vcxproj", "{277EDA6F-B431-4C85-B0F9-489D721EF180}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "taiji", "taiji\taiji.vcxproj", "{C04B36F6-0748-4206-A8F6-9109FB977A95}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iphone6s", "iphone6s\iphone6s.vcxproj", "{7B46F4C2-A82C-4377-9DC6-837BB7EE0230}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,6 +83,14 @@ Global
 		{C04B36F6-0748-4206-A8F6-9109FB977A95}.Release|x64.Build.0 = Release|x64
 		{C04B36F6-0748-4206-A8F6-9109FB977A95}.Release|x86.ActiveCfg = Release|Win32
 		{C04B36F6-0748-4206-A8F6-9109FB977A95}.Release|x86.Build.0 = Release|Win32
+		{7B46F4C2-A82C-4377-9DC6-837BB7EE0230}.Debug|x64.ActiveCfg = Debug|x64
+		{7B46F4C2-A82C-4377-9DC6-837BB7EE0230}.Debug|x64.Build.0 = Debug|x64
+		{7B46F4C2-A82C-4377-9DC6-837BB7EE0230}.Debug|x86.ActiveCfg = Debug|Win32
+		{7B46F4C2-A82C-4377-9DC6-837BB7EE0230}.Debug|x86.Build.0 = Debug|Win32
+		{7B46F4C2-A82C-4377-9DC6-837BB7EE0230}.Release|x64.ActiveCfg = Release|x64
+		{7B46F4C2-A82C-4377-9DC6-837BB7EE0230}.Release|x64.Build.0 = Release|x64
+		{7B46F4C2-A82C-4377-9DC6-837BB7EE0230}.Release|x86.ActiveCfg = Release|Win32
+		{7B46F4C2-A82C-4377-9DC6-837BB7EE0230}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
