@@ -16,7 +16,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 		hr = CoCreateInstance(__uuidof(FileOpenDialog), NULL, CLSCTX_ALL,
 			IID_PPV_ARGS(&pFileOpen));
 
-
 		FILEOPENDIALOGOPTIONS fos;
 		hr = pFileOpen->GetOptions(&fos);
 		if (SUCCEEDED(hr))
