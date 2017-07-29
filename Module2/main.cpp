@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <shobjidl.h> 
+#include <atlbase.h>//Contains the declaration of CComPtr.
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow)
 {
@@ -8,10 +9,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	if (SUCCEEDED(hr))
 	{
 		//create  object in COM
-		IFileOpenDialog *pFileOpen;
-		hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
-			IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
-		
+		//IFileOpenDialog *pFileOpen;
+		CComPtr<IFileOpenDialog> pFileOpen;
+		//hr = CoCreateInstance(__uuidof(FileOpenDialog), NULL, CLSCTX_ALL,
+		//	__uuidof(pFileOpen), reinterpret_cast<void**>(&pFileOpen));
+		hr = CoCreateInstance(__uuidof(FileOpenDialog), NULL, CLSCTX_ALL,
+			IID_PPV_ARGS(&pFileOpen));
+
 
 		FILEOPENDIALOGOPTIONS fos;
 		hr = pFileOpen->GetOptions(&fos);
@@ -22,17 +26,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 		if (SUCCEEDED(hr))
 		{
 			pFileOpen->Show(NULL);
-			IShellItem *pItem;
+			//IShellItem *pItem;
+			CComPtr<IShellItem> pItem;
 			hr = pFileOpen->GetResult(&pItem);
 			if (SUCCEEDED(hr))
 			{
 				LPWSTR szFile;
 				pItem->GetDisplayName(SIGDN_FILESYSPATH, &szFile);
 				MessageBox(NULL, szFile, TEXT("ÎÄ¼þ¼Ð"), MB_OK);
+				CoTaskMemFree(szFile);
 			}
-			pItem->Release();
+			//pItem->Release();
 		}
-		pFileOpen->Release();
+		//pFileOpen->Release();
 	}
 	CoUninitialize();
 	return 0;
