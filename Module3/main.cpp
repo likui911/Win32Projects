@@ -61,7 +61,9 @@ void MainWindow::CalculateLayout()
 		const float x = size.width / 2;
 		const float y = size.height / 2;
 		const float radius = min(x, y) * 5 / 6;
-		ellipse = D2D1::Ellipse(D2D1::Point2F(x, y), radius, radius);
+		ellipse = D2D1::Ellipse(D2D1::Point2F(x, y), radius, radius/2);
+		//rotate the ellipse
+		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Rotation(20, D2D1::Point2F(x, y)));
 	}
 }
 
@@ -106,6 +108,8 @@ void MainWindow::OnPaint()
 
 		pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::LightSkyBlue));
 		pRenderTarget->FillEllipse(ellipse, pBrush);
+		//remove the current transform
+		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 
 		hr = pRenderTarget->EndDraw();
 		// re-create the render target and all device-dependent resources
