@@ -1,5 +1,4 @@
 #pragma once
-#include <Windows.h>
 template <class DERIVED_TYPE>
 class BaseWindow
 {
@@ -41,6 +40,7 @@ public:
 		wc.lpfnWndProc = DERIVED_TYPE::WindowProc;
 		wc.hInstance = GetModuleHandle(NULL);
 		wc.lpszClassName = ClassName();
+
 		RegisterClass(&wc);
 
 		m_hwnd = CreateWindowEx(
