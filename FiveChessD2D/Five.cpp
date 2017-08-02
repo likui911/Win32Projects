@@ -346,24 +346,34 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			return -1;  // Fail CreateWindowEx.
 		}
 		return 0;
+
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
+
 	case WM_PAINT:
 		OnPaint();
 		return 0;
+
 	case WM_SIZE:
 		Resize();
 		return 0;
+
 	case WM_LBUTTONDOWN:
 		if (OnLeftButtonDown(lParam))
 		{
 			InvalidateRect(m_hwnd, NULL, FALSE);
 		}
 		return 0;
+
 	case WM_LBUTTONUP:
 		OnLeftButtonUp();
 		return 0;
+
+	case WM_SETCURSOR:
+		SetCursor(LoadCursor(NULL,IDC_ARROW));
+		return 0;
+
 	}
 	return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
 }
