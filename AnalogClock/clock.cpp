@@ -240,7 +240,8 @@ void AnalogClock::DrawClockNum()
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	AnalogClock analog;
-	if (!analog.Create(TEXT("Analog Clock"), WS_OVERLAPPEDWINDOW | WS_EX_LAYERED, CW_USEDEFAULT, CW_USEDEFAULT, 300, 300))
+	if (!analog.Create(TEXT("Analog Clock"),
+		WS_OVERLAPPEDWINDOW | WS_EX_LAYERED, CW_USEDEFAULT, CW_USEDEFAULT, 300, 300))
 	{
 		return 0;
 	}
