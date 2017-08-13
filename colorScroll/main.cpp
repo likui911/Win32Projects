@@ -88,6 +88,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 
 		SetScrollPos(scrolls[id], SB_CTL, colors[id], TRUE);
+
+		if (hbrClient != NULL)
+		{
+			DeleteObject(hbrClient);
+		}
 		hbrClient = CreateSolidBrush(RGB(colors[0], colors[1], colors[2]));
 		//send message to client window 
 		SendMessage(hChild, WM_COLORCHANGE, 0, (UINT_PTR)hbrClient);
@@ -120,8 +125,6 @@ LRESULT CALLBACK ChildProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		GetClientRect(hwnd, &rc);
 		FillRect(hdc, &rc, hbr);
 
-		//delete old hbr
-		DeleteObject(hbr);
 		EndPaint(hwnd, &ps);
 		return 0;
 	}
