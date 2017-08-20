@@ -57,6 +57,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Colors2", "Colors2\Colors2.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hexCalc", "hexCalc\hexCalc.vcxproj", "{8B634BFD-4233-4EA2-9CC9-A1C65558B5F1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "POPPAD", "POPPAD\POPPAD.vcxproj", "{731A7192-2A23-44CC-B6EA-CECB1A264FCE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -281,6 +283,14 @@ Global
 		{8B634BFD-4233-4EA2-9CC9-A1C65558B5F1}.Release|x64.Build.0 = Release|x64
 		{8B634BFD-4233-4EA2-9CC9-A1C65558B5F1}.Release|x86.ActiveCfg = Release|Win32
 		{8B634BFD-4233-4EA2-9CC9-A1C65558B5F1}.Release|x86.Build.0 = Release|Win32
+		{731A7192-2A23-44CC-B6EA-CECB1A264FCE}.Debug|x64.ActiveCfg = Debug|x64
+		{731A7192-2A23-44CC-B6EA-CECB1A264FCE}.Debug|x64.Build.0 = Debug|x64
+		{731A7192-2A23-44CC-B6EA-CECB1A264FCE}.Debug|x86.ActiveCfg = Debug|Win32
+		{731A7192-2A23-44CC-B6EA-CECB1A264FCE}.Debug|x86.Build.0 = Debug|Win32
+		{731A7192-2A23-44CC-B6EA-CECB1A264FCE}.Release|x64.ActiveCfg = Release|x64
+		{731A7192-2A23-44CC-B6EA-CECB1A264FCE}.Release|x64.Build.0 = Release|x64
+		{731A7192-2A23-44CC-B6EA-CECB1A264FCE}.Release|x86.ActiveCfg = Release|Win32
+		{731A7192-2A23-44CC-B6EA-CECB1A264FCE}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
