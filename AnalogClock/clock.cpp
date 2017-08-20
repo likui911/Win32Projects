@@ -256,5 +256,3 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	}
 	return (int)msg.wParam;
 }
-
-
