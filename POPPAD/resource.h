@@ -18,7 +18,7 @@
 #define ID_FILE_SAVEAS                  32774
 #define ID_FILE_SEPARATOR               32775
 #define ID_EDIT_UNDO                    32776
-#define ID_EDIT_REDO                    32777
+#define ID_EDIT_CUT                     32777
 #define ID_EDIT_COPY                    32778
 #define ID_EDIT_PASTE                   32779
 #define ID_EDIT_DELETE                  32780

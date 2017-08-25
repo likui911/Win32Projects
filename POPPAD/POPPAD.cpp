@@ -55,6 +55,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	static HINSTANCE hInst;
 	static BOOL bNeedSave = FALSE;
 	static TCHAR szFileName[MAX_PATH], szTitleName[MAX_PATH];
+	DWORD dwSel;
+	BOOL bEnable;
 
 	switch (msg)
 	{
@@ -70,6 +72,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		PopFileInitialize(hwnd);
 		PopInitializeFont(hwndEdit);
+		return 0;
+
+	case WM_INITMENUPOPUP:
+		switch (LOWORD(lParam))
+		{
+		case 1://edit menu
+			EnableMenuItem((HMENU)wParam, ID_EDIT_UNDO,
+				SendMessage(hwndEdit, EM_CANUNDO, 0, 0) ? MF_ENABLED : MF_GRAYED);
+			EnableMenuItem((HMENU)wParam, ID_EDIT_PASTE,
+				IsClipboardFormatAvailable(CF_TEXT) ? MF_ENABLED : MF_GRAYED);
+
+			dwSel = SendMessage(hwndEdit, EM_GETSEL, NULL, NULL);
+			bEnable = (LOWORD(dwSel) < HIWORD(dwSel)) ? TRUE : FALSE;
+			EnableMenuItem((HMENU)wParam, ID_EDIT_COPY, bEnable ? MF_ENABLED : MF_GRAYED);
+			EnableMenuItem((HMENU)wParam, ID_EDIT_DELETE, bEnable ? MF_ENABLED : MF_GRAYED);
+			EnableMenuItem((HMENU)wParam, ID_EDIT_CUT, bEnable ? MF_ENABLED : MF_GRAYED);
+			break;
+		case 2:
+			//TODO SEARCH
+			break;
+
+		}
 		return 0;
 
 	case WM_SETFOCUS:
@@ -162,10 +186,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			SendMessage(hwnd, WM_DESTROY, 0, 0);
 			return 0;
 
+		case ID_EDIT_UNDO:
+			SendMessage(hwndEdit, EM_UNDO, 0, 0);
+			return 0;
+
+		case ID_EDIT_CUT:
+			SendMessage(hwndEdit, WM_CUT, 0, 0);
+			return 0;
+
+		case ID_EDIT_COPY:
+			SendMessage(hwndEdit, WM_COPY, 0, 0);
+			return 0;
+
+		case ID_EDIT_DELETE:
+			SendMessage(hwndEdit, WM_CLEAR, 0, 0);
+			return 0;
+
+		case ID_EDIT_SELECTALL:
+			SendMessage(hwndEdit, EM_SETSEL, 0, -1);
+			return 0;
+
 		case ID_FOMAT_FONT:
 			if (PopFontChoose(hwnd))
 			{
-				//创建并设置字体
+				DeleteObject(hFont);
+				hFont = CreateFontIndirect(&logfont);
+				SendMessage(hwndEdit, WM_SETFONT, (WPARAM)hFont, 0);
+				RECT rect;
+				GetClientRect(hwndEdit, &rect);
+				InvalidateRect(hwndEdit, &rect, TRUE);
 			}
 			return 0;
 
@@ -176,6 +225,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	case WM_DESTROY:
+		DeleteObject(hFont);
 		PostQuitMessage(0);
 		return 0;
 	}
@@ -487,4 +537,3 @@ int CheckUnicodeWithoutBOM(const PBYTE pText, long length)
 	}
 	return TRUE;
 }
-                                                                                           
