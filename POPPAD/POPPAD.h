@@ -32,8 +32,11 @@ Encode DetectEncode(const PBYTE, long length);
 //font dialog
 static LOGFONT logfont;
 static HFONT hFont;
+static CHOOSEFONT choosef;
 //todo 字体设置
 //初始化时hwndedit设置为系统字体
+void PopInitializeFont(HWND hwnd);
+BOOL PopFontChoose(HWND hwnd);
 //打开字体选择框
 //设置字体
 

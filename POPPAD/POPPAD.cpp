@@ -69,6 +69,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		DoCaption(hwnd, szTitleName);
 
 		PopFileInitialize(hwnd);
+		PopInitializeFont(hwndEdit);
 		return 0;
 
 	case WM_SETFOCUS:
@@ -162,6 +163,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			return 0;
 
 		case ID_FOMAT_FONT:
+			if (PopFontChoose(hwnd))
+			{
+				//创建并设置字体
+			}
 			return 0;
 
 		case IDM_ABOUT:
@@ -402,6 +407,35 @@ Encode DetectEncode(const PBYTE pBuffer, long length)
 	}
 }
 
+void PopInitializeFont(HWND hwnd)
+{
+	hFont = (HFONT)GetStockObject(SYSTEM_FONT);
+	GetObject(hFont, sizeof(LOGFONT), &logfont);
+	SendMessage(hwnd, WM_SETFONT, (WPARAM)hFont, 0);
+}
+
+BOOL PopFontChoose(HWND hwnd)
+{
+	choosef.lStructSize = sizeof(CHOOSEFONT);
+	choosef.hwndOwner = hwnd;
+	choosef.hDC = NULL;
+	choosef.lpLogFont = &logfont;
+	choosef.iPointSize = NULL;
+	choosef.Flags = CF_EFFECTS | CF_INITTOLOGFONTSTRUCT;
+	choosef.rgbColors = NULL;
+	choosef.lCustData = NULL;
+	choosef.lpfnHook = NULL;
+	choosef.lpTemplateName = NULL;
+	choosef.hInstance = NULL;
+	choosef.lpszStyle = NULL;
+	choosef.nFontType = NULL;
+	choosef.nSizeMin = 8;
+	choosef.nSizeMax = 72;
+
+	return ChooseFont(&choosef);
+
+}
+
 int CheckUnicodeWithoutBOM(const PBYTE pText, long length)
 {
 	int i;
@@ -453,3 +487,4 @@ int CheckUnicodeWithoutBOM(const PBYTE pText, long length)
 	}
 	return TRUE;
 }
+                                                                                           
