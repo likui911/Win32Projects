@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "resource.h"
+#include <algorithm>
 
 #define UNTITLED TEXT("UNTITLED")
 
@@ -22,11 +23,11 @@ void PopFileInitialize(HWND hwnd);
 BOOL PopFileOpenDialog(HWND hwnd, PTSTR pstrFileName, PTSTR pstrTitleName);
 BOOL PopFileRead(HWND hwndEdit, PTSTR pstrFileName);
 BOOL PopFileSaveDialog(HWND hwnd, PTSTR pstrFileName, PTSTR pstrTitleName);
-BOOL PopFileWrite(HWND hwndEdit,PTSTR pstrFileName);
+BOOL PopFileWrite(HWND hwndEdit, PTSTR pstrFileName);
 
 //ANSI Unicode
-enum class Encode{ANSI=1,UNICODE_LE,UNICODE_BE,UTF8,UTF8_NOBOM};
-BOOL CheckUnicodeWithoutBOM(const PBYTE pText,long length);
+enum class Encode { ANSI = 1, UNICODE_LE, UNICODE_BE, UTF8, UTF8_NOBOM };
+BOOL CheckUnicodeWithoutBOM(const PBYTE pText, long length);
 Encode DetectEncode(const PBYTE, long length);
 
 //font dialog
@@ -36,4 +37,16 @@ static CHOOSEFONT choosef;
 void PopInitializeFont(HWND hwnd);
 BOOL PopFontChoose(HWND hwnd);
 
+//search dialog
+#define MAXFIND 256
+static FINDREPLACE findre;
+static TCHAR szFindWhat[MAXFIND];
+static TCHAR szReplaceWhat[MAXFIND];
+static BOOL bFindDown;
+UINT uFindReplaceMsg;
+HWND PopFindDialog(HWND hwnd);
+BOOL SearchText(HWND hwndEdit, BOOL bFlag);
+HWND PopReplaceDialog(HWND hwnd);
+TCHAR* ReverseSearch(TCHAR* str, const TCHAR* sub_str);
+void SearchNotFound();
 

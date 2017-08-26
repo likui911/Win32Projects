@@ -69,7 +69,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		SendMessage(hwndEdit, EM_LIMITTEXT, 32000, 0L);
 		szTitleName[0] = '\0';
 		DoCaption(hwnd, szTitleName);
-
+		uFindReplaceMsg = RegisterWindowMessage(FINDMSGSTRING);
 		PopFileInitialize(hwnd);
 		PopInitializeFont(hwndEdit);
 		return 0;
@@ -89,10 +89,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			EnableMenuItem((HMENU)wParam, ID_EDIT_DELETE, bEnable ? MF_ENABLED : MF_GRAYED);
 			EnableMenuItem((HMENU)wParam, ID_EDIT_CUT, bEnable ? MF_ENABLED : MF_GRAYED);
 			break;
-		case 2:
-			//TODO SEARCH
-			break;
-
 		}
 		return 0;
 
@@ -127,7 +123,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			szTitleName[0] = '\0';
 			DoCaption(hwnd, szTitleName);
 			bNeedSave = FALSE;
-			return 0;
+			break;
 
 		case ID_FILE_OPEN:
 			if (bNeedSave&&IDCANCEL == AskForSave(hwnd, szTitleName))
@@ -145,7 +141,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			DoCaption(hwnd, szTitleName);
 			bNeedSave = FALSE;
-			return 0;
+			break;
 
 		case ID_FILE_SAVE:
 			if (!szFileName[0])
@@ -161,8 +157,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			DoCaption(hwnd, szTitleName);
 			bNeedSave = FALSE;
-
-			return 0;
+			break;
 
 		case ID_FILE_SAVEAS:
 			if (PopFileSaveDialog(hwnd, szFileName, szTitleName))
@@ -176,7 +171,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			DoCaption(hwnd, szTitleName);
 			bNeedSave = FALSE;
-			return 0;
+			break;
 
 		case IDM_EXIT:
 			if (bNeedSave&&AskForSave(hwnd, szTitleName))
@@ -184,27 +179,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				return 0;
 			}
 			SendMessage(hwnd, WM_DESTROY, 0, 0);
-			return 0;
+			break;
 
 		case ID_EDIT_UNDO:
 			SendMessage(hwndEdit, EM_UNDO, 0, 0);
-			return 0;
+			break;
 
 		case ID_EDIT_CUT:
 			SendMessage(hwndEdit, WM_CUT, 0, 0);
-			return 0;
+			break;
 
 		case ID_EDIT_COPY:
 			SendMessage(hwndEdit, WM_COPY, 0, 0);
-			return 0;
+			break;
+
+		case ID_EDIT_PASTE:
+			SendMessage(hwndEdit, WM_PASTE, 0, 0);
+			break;
 
 		case ID_EDIT_DELETE:
 			SendMessage(hwndEdit, WM_CLEAR, 0, 0);
-			return 0;
+			break;
 
 		case ID_EDIT_SELECTALL:
 			SendMessage(hwndEdit, EM_SETSEL, 0, -1);
-			return 0;
+			break;
 
 		case ID_FOMAT_FONT:
 			if (PopFontChoose(hwnd))
@@ -216,11 +215,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				GetClientRect(hwndEdit, &rect);
 				InvalidateRect(hwndEdit, &rect, TRUE);
 			}
-			return 0;
+			break;
 
+		case ID_SEARCH_FIND:
+			PopFindDialog(hwnd);
+			break;
+
+		case ID_SEARCH_FINDNEXT:
+			if (*szFindWhat != '\0')
+			{
+				if (!SearchText(hwndEdit, bFindDown))
+				{
+					SearchNotFound();
+				}
+				break;
+			}
+			PopFindDialog(hwnd);
+			break;
+
+		case ID_SEARCH_REPLACE:
+			PopReplaceDialog(hwnd);
+			break;
 		case IDM_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hwnd, AboutWndProc);
-			return 0;
+			break;
 		}
 		return 0;
 
@@ -229,6 +247,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(0);
 		return 0;
 	}
+
+	if (msg == uFindReplaceMsg)
+	{
+		if (findre.Flags & FR_FINDNEXT)
+		{
+			bFindDown = findre.Flags& FR_DOWN;
+			if (!SearchText(hwndEdit, bFindDown))
+			{
+				SearchNotFound();
+			}
+		}
+		else if (findre.Flags&FR_REPLACE)
+		{
+			//todo replace
+		}
+		else if (findre.Flags&FR_REPLACEALL)
+		{
+			//todo replaceall
+		}
+		return 0;
+	}
+
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
@@ -481,9 +521,98 @@ BOOL PopFontChoose(HWND hwnd)
 	choosef.nFontType = NULL;
 	choosef.nSizeMin = 8;
 	choosef.nSizeMax = 72;
-
 	return ChooseFont(&choosef);
+}
 
+HWND PopFindDialog(HWND hwnd)
+{
+	findre.lStructSize = sizeof(FINDREPLACE);
+	findre.hwndOwner = hwnd;
+	findre.hInstance = NULL;
+	findre.Flags = FR_FINDNEXT | FR_MATCHCASE | FR_HIDEWHOLEWORD;
+	findre.lpstrFindWhat = szFindWhat;
+	findre.lpstrReplaceWith = NULL;
+	findre.wFindWhatLen = MAXFIND;
+	findre.wReplaceWithLen = NULL;
+	findre.lCustData = NULL;
+	findre.lpfnHook = NULL;
+	findre.lpTemplateName = NULL;
+	return FindText(&findre);
+}
+
+BOOL SearchText(HWND hwndEdit, BOOL bFlag)
+{
+	int iLength = GetWindowTextLength(hwndEdit);
+	TCHAR* pBuffer = (TCHAR*)malloc((iLength + 1) * sizeof(TCHAR));
+	GetWindowText(hwndEdit, pBuffer, iLength + 1);
+	if (bFlag)
+	{
+		int offset = HIWORD(SendMessage(hwndEdit, EM_GETSEL, 0, 0));
+		TCHAR *pFind = _tcsstr(pBuffer + offset, szFindWhat);
+		if (!pFind)
+		{
+			return FALSE;
+		}
+		offset = pFind - pBuffer;
+		SendMessage(hwndEdit, EM_SETSEL, offset, offset + _tcslen(szFindWhat));
+	}
+	else
+	{
+		int offset = LOWORD(SendMessage(hwndEdit, EM_GETSEL, 0, 0));
+		TCHAR *pText = (TCHAR*)malloc((offset + 1) * sizeof(TCHAR));
+		wcsncpy(pText, pBuffer, offset);
+		pText[offset] = '\0';
+
+		TCHAR *pFind = ReverseSearch(pText, szFindWhat);
+		if (!pFind)
+		{
+			return FALSE;
+		}
+		offset = pFind - pText;
+		SendMessage(hwndEdit, EM_SETSEL, offset, offset + _tcslen(szFindWhat));
+		free(pText);
+	}
+	free(pBuffer);
+	return TRUE;
+}
+
+HWND PopReplaceDialog(HWND hwnd)
+{
+	findre.lStructSize = sizeof(FINDREPLACE);
+	findre.hwndOwner = hwnd;
+	findre.hInstance = NULL;
+	findre.Flags = FR_FINDNEXT | FR_MATCHCASE | FR_HIDEWHOLEWORD;
+	findre.lpstrFindWhat = szFindWhat;
+	findre.lpstrReplaceWith = szReplaceWhat;
+	findre.wFindWhatLen = MAXFIND;
+	findre.wReplaceWithLen = MAXFIND;
+	findre.lCustData = NULL;
+	findre.lpfnHook = NULL;
+	findre.lpTemplateName = NULL;
+	return ReplaceText(&findre);
+}
+
+TCHAR* ReverseSearch(TCHAR * pStr, const TCHAR * pSub_str)
+{
+	TCHAR* pLast = pStr + wcslen(pStr);
+	for (; pLast >= pStr; pLast--)
+	{
+		if (*pLast == *pSub_str)
+		{
+			if (wcsncmp(pLast, pSub_str, wcslen(pSub_str)) == 0)
+			{
+				return pLast;
+			}
+		}
+	}
+	return nullptr;
+}
+
+void SearchNotFound()
+{
+	TCHAR szBuffer[64 + MAX_PATH];
+	wsprintf(szBuffer, TEXT("Can't find \"%s\""), findre.lpstrFindWhat);
+	MessageBox(NULL, szBuffer, szAppName, MB_ICONINFORMATION | MB_OK);
 }
 
 int CheckUnicodeWithoutBOM(const PBYTE pText, long length)
