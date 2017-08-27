@@ -4,10 +4,16 @@
 #include "resource.h"
 #include <algorithm>
 
-#define UNTITLED TEXT("UNTITLED")
+#define MAXFIND 256
 
-static WCHAR szAppName[] = TEXT("POPPAD");
+static WCHAR szAppName[MAX_PATH];
+static WCHAR szUntitled[MAX_PATH];
+static WCHAR szOkMessageR[256];
+static WCHAR szOkMessageW[256];
+static WCHAR szAsForSave[256];
+static WCHAR szStrNotFound[MAXFIND];
 
+void InitializeResource(HINSTANCE hInstance);
 //dialog procedure
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK AboutWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -38,15 +44,14 @@ void PopInitializeFont(HWND hwnd);
 BOOL PopFontChoose(HWND hwnd);
 
 //search dialog
-#define MAXFIND 256
 static FINDREPLACE findre;
 static TCHAR szFindWhat[MAXFIND];
 static TCHAR szReplaceWhat[MAXFIND];
-static BOOL bFindDown;
 UINT uFindReplaceMsg;
 HWND PopFindDialog(HWND hwnd);
-BOOL SearchText(HWND hwndEdit, BOOL bFlag);
+BOOL SearchNextText(HWND hwndEdit, BOOL bFlag,BOOL bMatch);
 HWND PopReplaceDialog(HWND hwnd);
 TCHAR* ReverseSearch(TCHAR* str, const TCHAR* sub_str);
+BOOL ReplaceNextText(HWND hwndEdit,BOOL bMatch);
 void SearchNotFound();
 

@@ -7,11 +7,12 @@
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int icmdShow)
 {
+	InitializeResource(hInstance);
+
 	MSG        msg;
 	HWND       hwnd;
 	HACCEL     hacc;
 	WNDCLASS   wndcls{};
-
 	wndcls.style = CS_HREDRAW | CS_VREDRAW;
 	wndcls.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 	wndcls.hCursor = (HCURSOR)LoadImage(NULL, IDC_ARROW, IMAGE_CURSOR,
@@ -47,6 +48,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 	}
 
 	return (int)msg.wParam;
+}
+
+void InitializeResource(HINSTANCE hInstance)
+{
+	LoadString(hInstance, IDS_APP_TITLE, szAppName, sizeof(szAppName) / sizeof(TCHAR));
+	LoadString(hInstance, IDS_UNTITLE, szUntitled, sizeof(szUntitled) / sizeof(TCHAR));
+	LoadString(hInstance, IDS_OKMESSAGEW, szOkMessageW, sizeof(szOkMessageW) / sizeof(TCHAR));
+	LoadString(hInstance, IDS_OKMESSAGER, szOkMessageR, sizeof(szOkMessageR) / sizeof(TCHAR));
+	LoadString(hInstance, IDS_ASKFORSAVE, szAsForSave, sizeof(szAsForSave) / sizeof(TCHAR));
+	LoadString(hInstance, IDS_STRNOTFOUND, szStrNotFound, sizeof(szStrNotFound) / sizeof(TCHAR));
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -88,6 +99,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			EnableMenuItem((HMENU)wParam, ID_EDIT_COPY, bEnable ? MF_ENABLED : MF_GRAYED);
 			EnableMenuItem((HMENU)wParam, ID_EDIT_DELETE, bEnable ? MF_ENABLED : MF_GRAYED);
 			EnableMenuItem((HMENU)wParam, ID_EDIT_CUT, bEnable ? MF_ENABLED : MF_GRAYED);
+			break;
+		case 2:
+			bEnable = (BOOL)GetWindowTextLength(hwndEdit);
+			EnableMenuItem((HMENU)wParam, ID_SEARCH_FIND, bEnable ? MF_ENABLED : MF_GRAYED);
+			EnableMenuItem((HMENU)wParam, ID_SEARCH_FINDNEXT, bEnable ? MF_ENABLED : MF_GRAYED);
 			break;
 		}
 		return 0;
@@ -134,7 +150,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
 				if (!PopFileRead(hwndEdit, szFileName))
 				{
-					OkMessage(hwnd, TEXT("Could not read file %s!"), szTitleName);
+					OkMessage(hwnd, szOkMessageR, szTitleName);
 					szFileName[0] = '\0';
 					szTitleName[0] = '\0';
 				}
@@ -151,7 +167,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			if (!PopFileWrite(hwndEdit, szFileName))
 			{
-				OkMessage(hwnd, TEXT("Could not read file %s!"), szTitleName);
+				OkMessage(hwnd, szOkMessageW, szTitleName);
 				szFileName[0] = '\0';
 				szTitleName[0] = '\0';
 			}
@@ -164,13 +180,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
 				if (!PopFileWrite(hwndEdit, szFileName))
 				{
-					OkMessage(hwnd, TEXT("Could not read file %s!"), szTitleName);
+					OkMessage(hwnd, szOkMessageW, szTitleName);
 					szFileName[0] = '\0';
 					szTitleName[0] = '\0';
 				}
 			}
 			DoCaption(hwnd, szTitleName);
 			bNeedSave = FALSE;
+			break;
+
+		case ID_PRINT:
+			//TODO print
+			MessageBeep(0);
 			break;
 
 		case IDM_EXIT:
@@ -224,7 +245,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case ID_SEARCH_FINDNEXT:
 			if (*szFindWhat != '\0')
 			{
-				if (!SearchText(hwndEdit, bFindDown))
+				if (!SearchNextText(hwndEdit, findre.Flags& FR_DOWN, findre.Flags&FR_MATCHCASE))
 				{
 					SearchNotFound();
 				}
@@ -236,6 +257,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case ID_SEARCH_REPLACE:
 			PopReplaceDialog(hwnd);
 			break;
+
 		case IDM_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hwnd, AboutWndProc);
 			break;
@@ -252,19 +274,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 		if (findre.Flags & FR_FINDNEXT)
 		{
-			bFindDown = findre.Flags& FR_DOWN;
-			if (!SearchText(hwndEdit, bFindDown))
+			if (!SearchNextText(hwndEdit, findre.Flags& FR_DOWN, findre.Flags& FR_MATCHCASE))
 			{
 				SearchNotFound();
 			}
 		}
 		else if (findre.Flags&FR_REPLACE)
 		{
-			//todo replace
+			if (!ReplaceNextText(hwndEdit, findre.Flags&FR_MATCHCASE))
+			{
+				SearchNotFound();
+			}
 		}
 		else if (findre.Flags&FR_REPLACEALL)
 		{
-			//todo replaceall
+			SendMessage(hwndEdit, EM_SETSEL, (WPARAM)0, 0);
+			while (ReplaceNextText(hwndEdit, findre.Flags&FR_MATCHCASE));
 		}
 		return 0;
 	}
@@ -290,14 +315,14 @@ BOOL CALLBACK AboutWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 void DoCaption(HWND hwnd, TCHAR * szTitleName)
 {
 	TCHAR szCaption[64 + MAX_PATH];
-	wsprintf(szCaption, TEXT("%s %s"), szTitleName[0] ? szTitleName : UNTITLED, szAppName);
+	wsprintf(szCaption, TEXT("%s %s"), szTitleName[0] ? szTitleName : szUntitled, szAppName);
 	SetWindowText(hwnd, szCaption);
 }
 
 void OkMessage(HWND hwnd, TCHAR * szMessage, TCHAR * szTitleName)
 {
 	TCHAR szBuffer[64 + MAX_PATH];
-	wsprintf(szBuffer, szMessage, szTitleName[0] ? szTitleName : UNTITLED);
+	wsprintf(szBuffer, szMessage, szTitleName[0] ? szTitleName : szUntitled);
 	MessageBox(hwnd, szBuffer, szAppName, MB_OK | MB_ICONEXCLAMATION);
 }
 
@@ -306,7 +331,7 @@ int AskForSave(HWND hwnd, WCHAR* szTitleName)
 
 	TCHAR szBuffer[64 + MAX_PATH];
 	int iReturn;
-	wsprintf(szBuffer, TEXT("Save current changes in %s?"), szTitleName[0] ? szTitleName : UNTITLED);
+	wsprintf(szBuffer, szAsForSave, szTitleName[0] ? szTitleName : szUntitled);
 	iReturn = MessageBox(hwnd, szBuffer, szAppName, MB_YESNOCANCEL | MB_ICONQUESTION);
 	if (iReturn == IDYES)
 	{
@@ -529,7 +554,7 @@ HWND PopFindDialog(HWND hwnd)
 	findre.lStructSize = sizeof(FINDREPLACE);
 	findre.hwndOwner = hwnd;
 	findre.hInstance = NULL;
-	findre.Flags = FR_FINDNEXT | FR_MATCHCASE | FR_HIDEWHOLEWORD;
+	findre.Flags = findre.Flags | FR_FINDNEXT | FR_HIDEWHOLEWORD;
 	findre.lpstrFindWhat = szFindWhat;
 	findre.lpstrReplaceWith = NULL;
 	findre.wFindWhatLen = MAXFIND;
@@ -540,36 +565,43 @@ HWND PopFindDialog(HWND hwnd)
 	return FindText(&findre);
 }
 
-BOOL SearchText(HWND hwndEdit, BOOL bFlag)
+BOOL SearchNextText(HWND hwndEdit, BOOL bFlag, BOOL bMatch)
 {
 	int iLength = GetWindowTextLength(hwndEdit);
 	TCHAR* pBuffer = (TCHAR*)malloc((iLength + 1) * sizeof(TCHAR));
 	GetWindowText(hwndEdit, pBuffer, iLength + 1);
+	TCHAR szFind[MAXFIND];
+	lstrcpy(szFind, szFindWhat);
+	if (!bMatch)
+	{
+		_wcslwr_s(szFind, wcslen(szFind) + 1);
+		_wcslwr_s(pBuffer, iLength + 1);
+	}
 	if (bFlag)
 	{
 		int offset = HIWORD(SendMessage(hwndEdit, EM_GETSEL, 0, 0));
-		TCHAR *pFind = _tcsstr(pBuffer + offset, szFindWhat);
+		TCHAR *pFind = _tcsstr(pBuffer + offset, szFind);
 		if (!pFind)
 		{
 			return FALSE;
 		}
 		offset = pFind - pBuffer;
-		SendMessage(hwndEdit, EM_SETSEL, offset, offset + _tcslen(szFindWhat));
+		SendMessage(hwndEdit, EM_SETSEL, offset, offset + _tcslen(szFind));
 	}
 	else
 	{
 		int offset = LOWORD(SendMessage(hwndEdit, EM_GETSEL, 0, 0));
 		TCHAR *pText = (TCHAR*)malloc((offset + 1) * sizeof(TCHAR));
-		wcsncpy(pText, pBuffer, offset);
+		wcsncpy_s(pText, offset + 1, pBuffer, offset);
 		pText[offset] = '\0';
 
-		TCHAR *pFind = ReverseSearch(pText, szFindWhat);
+		TCHAR *pFind = ReverseSearch(pText, szFind);
 		if (!pFind)
 		{
 			return FALSE;
 		}
 		offset = pFind - pText;
-		SendMessage(hwndEdit, EM_SETSEL, offset, offset + _tcslen(szFindWhat));
+		SendMessage(hwndEdit, EM_SETSEL, offset, offset + _tcslen(szFind));
 		free(pText);
 	}
 	free(pBuffer);
@@ -608,25 +640,46 @@ TCHAR* ReverseSearch(TCHAR * pStr, const TCHAR * pSub_str)
 	return nullptr;
 }
 
+BOOL ReplaceNextText(HWND hwndEdit, BOOL bMatch)
+{
+	int iLength = GetWindowTextLength(hwndEdit);
+	TCHAR* pBuffer = (TCHAR*)malloc((iLength + 1) * sizeof(TCHAR));
+	GetWindowText(hwndEdit, pBuffer, iLength + 1);
+
+	DWORD dwPosition = SendMessage(hwndEdit, EM_GETSEL, 0, 0);
+	int iSelected = HIWORD(dwPosition) - LOWORD(dwPosition);
+	TCHAR* pSelected = (TCHAR*)malloc((iSelected + 1) * sizeof(TCHAR));
+	wcsncpy_s(pSelected, iSelected + 1, pBuffer + LOWORD(dwPosition), iSelected);
+	pSelected[iSelected] = '\0';
+
+	if (wcscmp(pSelected, szFindWhat) != 0)
+	{
+		return SearchNextText(hwndEdit, TRUE, bMatch);
+	}
+	SendMessage(hwndEdit, EM_REPLACESEL, 0, (LPARAM)szReplaceWhat);
+	return SearchNextText(hwndEdit, TRUE, bMatch);
+}
+
 void SearchNotFound()
 {
 	TCHAR szBuffer[64 + MAX_PATH];
-	wsprintf(szBuffer, TEXT("Can't find \"%s\""), findre.lpstrFindWhat);
+	wsprintf(szBuffer, szStrNotFound, findre.lpstrFindWhat);
 	MessageBox(NULL, szBuffer, szAppName, MB_ICONINFORMATION | MB_OK);
 }
 
 int CheckUnicodeWithoutBOM(const PBYTE pText, long length)
 {
 	int i;
-	DWORD nBytes = 0;//UFT8可用1-6个字节编码,ASCII用一个字节
+	DWORD nBytes = 0;
 	UCHAR chr;
-	BOOL bAllAscii = TRUE; //如果全部都是ASCII, 说明不是UTF-8
+
+	BOOL bAllAscii = TRUE; 
 	for (i = 0; i < length; i++)
 	{
 		chr = *(pText + i);
-		if ((chr & 0x80) != 0) // 判断是否ASCII编码,如果不是,说明有可能是UTF-8,ASCII用7位编码,但用一个字节存,最高位标记为0,o0xxxxxxx
+		if ((chr & 0x80) != 0) 
 			bAllAscii = FALSE;
-		if (nBytes == 0) //如果不是ASCII码,应该是多字节符,计算字节数
+		if (nBytes == 0) 
 		{
 			if (chr >= 0x80)
 			{
@@ -647,7 +700,7 @@ int CheckUnicodeWithoutBOM(const PBYTE pText, long length)
 				nBytes--;
 			}
 		}
-		else //多字节符的非首字节,应为 10xxxxxx
+		else 
 		{
 			if ((chr & 0xC0) != 0x80)
 			{
@@ -656,11 +709,11 @@ int CheckUnicodeWithoutBOM(const PBYTE pText, long length)
 			nBytes--;
 		}
 	}
-	if (nBytes > 0) //违返规则
+	if (nBytes > 0) 
 	{
 		return FALSE;
 	}
-	if (bAllAscii) //如果全部都是ASCII, 说明不是UTF-8
+	if (bAllAscii) 
 	{
 		return FALSE;
 	}
