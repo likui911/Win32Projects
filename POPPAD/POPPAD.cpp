@@ -88,6 +88,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_INITMENUPOPUP:
 		switch (LOWORD(lParam))
 		{
+		case 0://file menu
+			EnableMenuItem((HMENU)wParam, ID_PRINT, MF_GRAYED);
+			break;
 		case 1://edit menu
 			EnableMenuItem((HMENU)wParam, ID_EDIT_UNDO,
 				SendMessage(hwndEdit, EM_CANUNDO, 0, 0) ? MF_ENABLED : MF_GRAYED);
@@ -100,7 +103,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			EnableMenuItem((HMENU)wParam, ID_EDIT_DELETE, bEnable ? MF_ENABLED : MF_GRAYED);
 			EnableMenuItem((HMENU)wParam, ID_EDIT_CUT, bEnable ? MF_ENABLED : MF_GRAYED);
 			break;
-		case 2:
+		case 2://search menu
 			bEnable = (BOOL)GetWindowTextLength(hwndEdit);
 			EnableMenuItem((HMENU)wParam, ID_SEARCH_FIND, bEnable ? MF_ENABLED : MF_GRAYED);
 			EnableMenuItem((HMENU)wParam, ID_SEARCH_FINDNEXT, bEnable ? MF_ENABLED : MF_GRAYED);
@@ -190,8 +193,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case ID_PRINT:
-			//TODO print
-			MessageBeep(0);
+			PopPrintDlg(hwnd);
 			break;
 
 		case IDM_EXIT:
@@ -652,6 +654,9 @@ BOOL ReplaceNextText(HWND hwndEdit, BOOL bMatch)
 	wcsncpy_s(pSelected, iSelected + 1, pBuffer + LOWORD(dwPosition), iSelected);
 	pSelected[iSelected] = '\0';
 
+	free(pBuffer);
+	free(pSelected);
+
 	if (wcscmp(pSelected, szFindWhat) != 0)
 	{
 		return SearchNextText(hwndEdit, TRUE, bMatch);
@@ -667,19 +672,40 @@ void SearchNotFound()
 	MessageBox(NULL, szBuffer, szAppName, MB_ICONINFORMATION | MB_OK);
 }
 
+void PopPrintDlg(HWND hwnd)
+{
+	ZeroMemory(&pd, sizeof(pd));
+	pd.lStructSize = sizeof(pd);
+	pd.hwndOwner = hwnd;
+	pd.hDevMode = NULL;
+	pd.hDevNames = NULL;
+	pd.Flags = PD_USEDEVMODECOPIESANDCOLLATE | PD_RETURNDC;
+	pd.nCopies = 1;
+	pd.nFromPage = 0xFFFF;
+	pd.nToPage = 0xFFFF;
+	pd.nMinPage = 1;
+	pd.nMaxPage = 0xFFFF;
+
+	if (PrintDlg(&pd) == TRUE)
+	{
+		//TODO PAINT
+	}
+
+}
+
 int CheckUnicodeWithoutBOM(const PBYTE pText, long length)
 {
 	int i;
 	DWORD nBytes = 0;
 	UCHAR chr;
 
-	BOOL bAllAscii = TRUE; 
+	BOOL bAllAscii = TRUE;
 	for (i = 0; i < length; i++)
 	{
 		chr = *(pText + i);
-		if ((chr & 0x80) != 0) 
+		if ((chr & 0x80) != 0)
 			bAllAscii = FALSE;
-		if (nBytes == 0) 
+		if (nBytes == 0)
 		{
 			if (chr >= 0x80)
 			{
@@ -700,7 +726,7 @@ int CheckUnicodeWithoutBOM(const PBYTE pText, long length)
 				nBytes--;
 			}
 		}
-		else 
+		else
 		{
 			if ((chr & 0xC0) != 0x80)
 			{
@@ -709,11 +735,11 @@ int CheckUnicodeWithoutBOM(const PBYTE pText, long length)
 			nBytes--;
 		}
 	}
-	if (nBytes > 0) 
+	if (nBytes > 0)
 	{
 		return FALSE;
 	}
-	if (bAllAscii) 
+	if (bAllAscii)
 	{
 		return FALSE;
 	}

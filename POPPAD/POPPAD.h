@@ -55,3 +55,6 @@ TCHAR* ReverseSearch(TCHAR* str, const TCHAR* sub_str);
 BOOL ReplaceNextText(HWND hwndEdit,BOOL bMatch);
 void SearchNotFound();
 
+//print dialog
+static PRINTDLG pd;
+void PopPrintDlg(HWND hwnd);
